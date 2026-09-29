@@ -160,11 +160,31 @@ function xyToLatLon(poly,lat0){const R=6378137;return poly.map(q=>divisionOrient
 function renderLots(){lotLayers.forEach(l=>map.removeLayer(l));lotLayers=[];if(projectPts.length<3||!lotFractions.length)return;const {lat0,xy}=localXY(projectPts),xs=xy.map(q=>q.x),min=Math.min(...xs),max=Math.max(...xs),cuts=lotFractions.map(f=>min+(max-min)*f),bounds=[min,...cuts,max];let html='';for(let i=0;i<bounds.length-1;i++){let poly=clipVertical(xy,bounds[i],false);poly=clipVertical(poly,bounds[i+1],true);if(poly.length<3)continue;const ar=areaXY(poly),ll=xyToLatLon(poly,lat0);const layer=L.polygon(ll,{weight:2,fillOpacity:.18}).addTo(map).bindTooltip('Lot '+lotLabel(i)+' • '+Math.round(ar).toLocaleString('fr-FR')+' m²',{permanent:true,direction:'center'});lotLayers.push(layer);html+=`Lot ${lotLabel(i)} : <strong>~${Math.round(ar).toLocaleString('fr-FR')} m²</strong>${i<bounds.length-2?' • ':''}`}
 lotSummary.innerHTML=html||'Impossible de calculer les lots.';refreshProfessionalTables()}
 let divisionOrientation=0;
-function updateDivisionMethodUI(){const n=Math.max(2,Math.floor(Number(lotCount.value)||2)),m=document.getElementById('divisionMethod')?.value||'equal',a=projectArea();let h='';if(m==='percent')h='<label>Pourcentages des bénéficiaires (séparés par des virgules)</label><input id="divisionValues" placeholder="Ex. 25,25,30,20"><div class="notice">Le total doit faire 100 %.</div>';else if(m==='areas')h='<label>Superficies souhaitées en m² (séparées par des virgules)</label><input id="divisionValues" placeholder="Ex. 600,600,750,450"><div class="notice">Total disponible : '+(a?Math.round(a).toLocaleString('fr-FR')+' m²':'surface à calculer')+'.</div>';else if(m==='equalReserve')h='<label>Surface à réserver pour accès / espace commun (m²)</label><input id="divisionReserve" type="number" min="0" step="1" placeholder="Ex. 300">';divisionMethodInputs.innerHTML=h}
+function updateDivisionMethodUI(){const n=Math.max(2,Math.floor(Number(document.getElementById('lotCount')?.value)||2)),m=document.getElementById('divisionMethod')?.value||'equal',a=projectArea();let h='';if(m==='percent')h='<label>Pourcentages des bénéficiaires (séparés par des virgules)</label><input id="divisionValues" placeholder="Ex. 25,25,30,20"><div class="notice">Le total doit faire 100 %.</div>';else if(m==='areas')h='<label>Superficies souhaitées en m² (séparées par des virgules)</label><input id="divisionValues" placeholder="Ex. 600,600,750,450"><div class="notice">Total disponible : '+(a?Math.round(a).toLocaleString('fr-FR')+' m²':'surface à calculer')+'.</div>';else if(m==='equalReserve')h='<label>Surface à réserver pour accès / espace commun (m²)</label><input id="divisionReserve" type="number" min="0" step="1" placeholder="Ex. 300">';document.getElementById('divisionMethodInputs').innerHTML=h}
 function desiredFractions(n){const m=document.getElementById('divisionMethod')?.value||'equal',area=projectArea();let shares=[];if(m==='percent'||m==='areas'){const vals=(document.getElementById('divisionValues')?.value||'').split(/[;, ]+/).map(Number).filter(v=>Number.isFinite(v)&&v>0);if(vals.length!==n)throw new Error('Indique exactement '+n+' valeurs, une pour chaque bénéficiaire.');if(m==='percent'&&Math.abs(vals.reduce((a,b)=>a+b,0)-100)>.05)throw new Error('Le total des pourcentages doit être égal à 100 %.');if(m==='areas'&&area&&vals.reduce((a,b)=>a+b,0)>area+1)throw new Error('Les superficies demandées dépassent la surface disponible.');shares=vals}else if(m==='equalReserve'){const reserve=Math.max(0,Number(document.getElementById('divisionReserve')?.value)||0);if(area&&reserve>=area)throw new Error('La surface commune doit être inférieure à la surface du terrain.');shares=Array(n).fill(area?(area-reserve)/n:1)}else shares=Array(n).fill(1);const total=shares.reduce((a,b)=>a+b,0);let acc=0;return shares.slice(0,-1).map(v=>(acc+=v)/total)}
 function generateAlternative(){divisionOrientation=(divisionOrientation+1)%2;generateLots()}
 function lotLabel(i){let s='';for(i++;i>0;i=Math.floor((i-1)/26))s=String.fromCharCode(65+(i-1)%26)+s;return s}
-function generateLots(){if(projectPts.length<3&&parcelLayer)parcelContourToProject();if(projectPts.length<3)return alert('Aucun contour exploitable. Sélectionne une parcelle ou place au moins 3 points formant le contour du terrain.');const n=Math.floor(Number(lotCount.value));if(!Number.isFinite(n)||n<2)return alert('Indique un nombre de lots supérieur ou égal à 2.');lotCount.value=n;try{lotFractions=desiredFractions(n)}catch(e){return alert(e.message)}renderLotNames(n);lotControls.innerHTML=lotFractions.map((f,i)=>`<div style="margin:10px 0"><label>Séparation ${i+1}</label><input type="range" min="0.1" max="99.9" step="0.1" value="${(f*100).toFixed(1)}" oninput="moveCut(${i},this.value)"></div>`).join('');renderLots()}
+function generateLots(){
+ const countEl=document.getElementById('lotCount'),controlsEl=document.getElementById('lotControls'),summaryEl=document.getElementById('lotSummary');
+ try{
+  if(projectPts.length<3&&parcelLayer)parcelContourToProject();
+  if(projectPts.length<3)throw new Error('Aucun contour exploitable. Charge d’abord la parcelle à partager ou définis au moins 3 sommets.');
+  const n=Math.floor(Number(countEl?.value));
+  if(!Number.isFinite(n)||n<2)throw new Error('Indique un nombre de lots supérieur ou égal à 2.');
+  countEl.value=n;
+  lotFractions=desiredFractions(n);
+  if(!Array.isArray(lotFractions)||lotFractions.length!==n-1)throw new Error('Le calcul des séparations a échoué.');
+  renderLotNames(n);
+  controlsEl.innerHTML=lotFractions.map((f,i)=>`<div style="margin:10px 0"><label>Séparation ${i+1}</label><input type="range" min="0.1" max="99.9" step="0.1" value="${(f*100).toFixed(1)}" oninput="moveCut(${i},this.value)"></div>`).join('');
+  renderLots();
+  if(!lotLayers.length)throw new Error('Le contour est chargé mais aucune géométrie de lot n’a pu être créée.');
+  summaryEl.insertAdjacentHTML('afterbegin','<div class="status" style="margin-bottom:8px"><strong>✓ Proposition créée :</strong> '+lotLayers.length+' lot(s) affiché(s) sur la carte.</div>');
+  const group=L.featureGroup(lotLayers);if(group.getBounds().isValid())map.fitBounds(group.getBounds(),{padding:[35,35]});
+ }catch(e){
+  if(summaryEl)summaryEl.innerHTML='<div class="warn"><strong>Impossible de créer la proposition.</strong><br>'+e.message+'</div>';
+  console.error('generateLots',e);
+ }
+}
 function moveCut(i,v){let x=+v/100;const lo=i?lotFractions[i-1]+.01:.01,hi=i<lotFractions.length-1?lotFractions[i+1]-.01:.99;x=Math.max(lo,Math.min(hi,x));lotFractions[i]=x;renderLots()}
 
 let ocrPoints=[];
