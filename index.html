@@ -106,7 +106,7 @@ map.on('click',e=>{if(measureMode){measurePts.push(e.latlng);redrawMeasure()}});
 const streets=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'© OpenStreetMap'});
 const cadastreOverlay=L.tileLayer.wms('https://data.geopf.fr/wms-r/wms?',{layers:'CADASTRALPARCELS.PARCELLAIRE_EXPRESS',format:'image/png',transparent:true,version:'1.3.0',opacity:.9,attribution:'Cadastre © IGN/DGFiP',maxZoom:22}).addTo(map);
 L.control.layers({'Satellite':satellite,'Plan':streets},{'Parcelles cadastrales':cadastreOverlay},{position:'bottomright',collapsed:false}).addTo(map);
-let parcelLayer=null,pointMarker=null,userMarker=null;
+let parcelLayer=null,pointMarker=null,userMarker=null;let lotAssignments=[],divisionMode=null;
 proj4.defs('EPSG:4471','+proj=utm +zone=38 +south +ellps=GRS80 +units=m +no_defs +type=crs');
 proj4.defs('EPSG:10674','+proj=utm +zone=38 +south +ellps=GRS80 +units=m +no_defs +type=crs');
 proj4.defs('EPSG:5879','+proj=utm +zone=38 +south +ellps=intl +units=m +no_defs +type=crs');
