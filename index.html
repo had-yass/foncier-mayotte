@@ -150,40 +150,7 @@ function refreshProfessionalTables(){const n=lotLayers.length||(+lotCount.value|
 function renderAssignmentsSummary(n){lotAssignmentTable.innerHTML='<strong>Attributions souhaitées</strong><br>'+Array.from({length:n},(_,i)=>`Lot ${String.fromCharCode(65+i)} : <strong>${lotAssignments[i]||'Non attribué'}</strong>`).join(' • ')}
 function dossierHTML(){refreshProfessionalTables();const communeTxt=commune.options[commune.selectedIndex]?.text||'—';return `<!doctype html><html><head><meta charset="utf-8"><title>Dossier préparatoire</title><style>body{font-family:Arial;margin:28px;color:#111}h1{font-size:22px}table{border-collapse:collapse;width:100%;font-size:11px}th,td{border:1px solid #999;padding:6px}.warn{border:1px solid #c99;padding:10px;background:#fff8df}
 #settingsCard,#diagnosticCard{position:fixed;z-index:2200;left:50%;top:88px;transform:translateX(-50%);width:min(650px,calc(100vw - 32px));max-height:calc(100vh - 120px);overflow:auto;margin:0;background:rgba(255,255,255,.98);box-shadow:0 22px 70px #092b5540;border:1px solid #d9e2ec}.diagRow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #e4ebf2}.diagOk{color:#16865b;font-weight:800}.diagWarn{color:#9a6512;font-weight:800}.diagBad{color:#a22b2b;font-weight:800}@media(max-width:850px){#settingsCard,#diagnosticCard{top:72px;bottom:12px;max-height:none;width:calc(100vw - 20px)}}
-</style></head><body><h1>${projectName.value||'Projet de division parcellaire'}</h1><div class="warn"><b>PROJET PRÉPARATOIRE — NON CERTIFIÉ</b><br>Document destiné à préparer l’échange avec un professionnel. Il ne constitue ni un bornage, ni un document modificatif cadastral, ni un titre de propriété.</div><p><b>Demandeur :</b> ${projectOwner.value||'—'}<br><b>Commune :</b> ${communeTxt}<br><b>Section :</b> ${section.value||'—'}<br><b>Parcelle mère :</b> ${numero.value||'—'}<br><b>Méthode :</b> ${divisionMode==='terrain'?'Relevé GPS utilisateur':divisionMode==='auto'?'Proposition automatique':'Mixte / non précisée'}<br><b>Surface indicative du projet :</b> ${Math.round(projectArea()).toLocaleString('fr-FR')} m²</p><h2>Lots / attributions souhaitées</h2>${lotAssignmentTable.innerHTML}<h2>Liste des points topographiques préparatoires</h2>${coordinateTable.innerHTML}<p><b>Note :</b> les coordonnées, surfaces et limites devront être contrôlées par le professionnel avant toute utilisation réglementaire.</p><style>
-.fm-close-panel{position:absolute!important;top:10px!important;right:10px!important;width:34px!important;height:34px!important;padding:0!important;border-radius:50%!important;background:#fff!important;color:#173b66!important;border:1px solid #d7e1eb!important;box-shadow:0 3px 10px #0c2c5220!important;font-size:22px!important;line-height:30px!important;z-index:9999!important;text-align:center!important}
-.fm-close-panel:hover{background:#eef4fb!important;color:#1267c7!important}
-#parcelSearch,#pointSearch,#divisionCard,#proCard,#b,#t,#f,#settingsCard,#diagnosticCard{position:fixed}
-@media(max-width:850px){.fm-close-panel{top:8px!important;right:8px!important}}
-</style>
-<script>
-(function(){
- const ids=['parcelSearch','pointSearch','divisionCard','proCard','b','t','f','settingsCard','diagnosticCard'];
- function closeOne(el){
-   if(!el)return;
-   if(el.id==='parcelSearch'||el.id==='pointSearch') el.classList.remove('active');
-   else el.classList.add('hidden');
- }
- window.closeAllOpenPanels=function(){
-   ids.forEach(id=>closeOne(document.getElementById(id)));
-   const p=document.getElementById('p'); if(p)p.classList.remove('hidden');
- };
- function installCloseButtons(){
-   ids.forEach(id=>{
-     const el=document.getElementById(id);
-     if(!el||el.querySelector(':scope > .fm-close-panel'))return;
-     const b=document.createElement('button');
-     b.type='button'; b.className='fm-close-panel'; b.innerHTML='&times;';
-     b.setAttribute('aria-label','Fermer');
-     b.title='Fermer';
-     b.onclick=(e)=>{e.preventDefault();e.stopPropagation();closeOne(el);if(['b','t','f'].includes(id)){const p=document.getElementById('p');if(p)p.classList.remove('hidden')}};
-     el.prepend(b);
-   });
- }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installCloseButtons);else installCloseButtons(); setTimeout(installCloseButtons,500);
- document.addEventListener('keydown',e=>{if(e.key==='Escape')window.closeAllOpenPanels()});
-})();
-</script></body></html>`}
+</style></head><body><h1>${projectName.value||'Projet de division parcellaire'}</h1><div class="warn"><b>PROJET PRÉPARATOIRE — NON CERTIFIÉ</b><br>Document destiné à préparer l’échange avec un professionnel. Il ne constitue ni un bornage, ni un document modificatif cadastral, ni un titre de propriété.</div><p><b>Demandeur :</b> ${projectOwner.value||'—'}<br><b>Commune :</b> ${communeTxt}<br><b>Section :</b> ${section.value||'—'}<br><b>Parcelle mère :</b> ${numero.value||'—'}<br><b>Méthode :</b> ${divisionMode==='terrain'?'Relevé GPS utilisateur':divisionMode==='auto'?'Proposition automatique':'Mixte / non précisée'}<br><b>Surface indicative du projet :</b> ${Math.round(projectArea()).toLocaleString('fr-FR')} m²</p><h2>Lots / attributions souhaitées</h2>${lotAssignmentTable.innerHTML}<h2>Liste des points topographiques préparatoires</h2>${coordinateTable.innerHTML}<p><b>Note :</b> les coordonnées, surfaces et limites devront être contrôlées par le professionnel avant toute utilisation réglementaire.</p></body></html>`}
 function downloadDossierHTML(){dl('dossier-preparatoire-geometre.html','text/html;charset=utf-8',dossierHTML())}
 function showPro(){proCard.classList.remove('hidden');refreshProfessionalTables();proCard.scrollIntoView({behavior:'smooth'});exportProject(false)}
 function exportProject(scroll=true){proCard.classList.remove('hidden');const a=projectArea(),per=projectPerimeter();proSummary.textContent=projectPts.length?`${projectPts.length} point(s) prêts • surface indicative ${a?Math.round(a).toLocaleString('fr-FR')+' m²':'non calculable'} • périmètre ${per?per.toFixed(1)+' m':'—'}. ${lotLayers.length?' • '+lotLayers.length+' lot(s) préparé(s)':''}. Projet non certifié — à contrôler par un professionnel.`:'Ajoute d’abord des points au projet de division.';if(scroll)proCard.scrollIntoView({behavior:'smooth'})}
